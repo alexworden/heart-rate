@@ -1,0 +1,81 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        globally_quoted_identifiers: true
+        jdbc:
+          time_zone: UTC
+    naming:
+      physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+  sql:
+    init:
+      mode: never
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
+      table-name: spring_session
+    timeout: 1800
+    cookie:
+      name: SESSION
+      http-only: true
+      secure: false
+      same-site: lax
+
+jwt:
+  secret: test-jwt-secret-key-minimum-32-chars-long
+
+server:
+  port: 0
+  servlet:
+    session:
+      cookie:
+        secure: false
+        http-only: true
+        same-site: lax
+  cors:
+    allowed-origins: http://localhost:3000
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+app:
+  frontend-url: http://localhost:3000
+  email-from: test@example.com
+  security:
+    verification-link:
+      expiration: 7200
+    remember-me:
+      key: test-remember-me-key
+      validity-days: 30
+      cookie:
+        secure: false
+        http-only: true
+    rate-limiting:
+      login:
+        max-attempts: 5
+        window-minutes: 15
+      email-verification:
+        max-attempts: 3
+        window-minutes: 60
+      password-reset:
+        max-attempts: 3
+        window-minutes: 60
+
+logging:
+  level:
+    root: INFO
+    com.heartrate: DEBUG
+    org.springframework: INFO
+    org.springframework.session: DEBUG
+    org.hibernate.SQL: DEBUG

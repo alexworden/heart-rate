@@ -1,0 +1,101 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/heart_rate
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      pool-name: HikariPool
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # Use update for development, change to validate for production
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        globally_quoted_identifiers: true
+        default_schema: public
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+      table-name: spring_session
+    timeout: 1800  # 30 minutes in seconds
+    cookie:
+      name: SESSION
+      http-only: true
+      secure: true
+      same-site: strict
+      max-age: ${REMEMBER_ME_DURATION:2592000} # 30 days in seconds
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+      poll-interval: 2s
+      quiet-period: 1s
+    livereload:
+      enabled: true
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-specific-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-chars}
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: strict
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+app:
+  security:
+    verification-link:
+      expiration: ${VERIFICATION_LINK_EXPIRATION:2h}
+    remember-me:
+      key: ${REMEMBER_ME_KEY:changeme}
+      validity-days: 30
+      cookie:
+        secure: true
+        http-only: true
+    rate-limiting:
+      login:
+        max-attempts: 5
+        window-minutes: 15
+      email-verification:
+        max-attempts: 3
+        window-minutes: 60
+      password-reset:
+        max-attempts: 3
+        window-minutes: 60
+
+logging:
+  level:
+    root: INFO
+    com.heartrate: DEBUG
+    org.springframework: INFO
+    org.springframework.session: DEBUG
+    org.postgresql: DEBUG
+    com.zaxxer.hikari: DEBUG
