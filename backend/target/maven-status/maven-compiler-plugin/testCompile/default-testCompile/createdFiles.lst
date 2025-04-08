@@ -1,2 +1,5 @@
 com/heartrate/repository/UserRepositoryTest.class
+com/heartrate/config/TestConfig.class
+com/heartrate/service/TestEmailService$SentEmail.class
 com/heartrate/controller/UserControllerIntegrationTest.class
+com/heartrate/service/TestEmailService.class
