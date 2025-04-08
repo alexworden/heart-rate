@@ -1,6 +1,13 @@
 package com.heartrate.controller;
 
-import com.heartrate.model.User;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,16 +15,27 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import static org.junit.jupiter.api.Assertions.*;
+
+import com.heartrate.model.User;
+import com.heartrate.service.TestEmailService;
+import com.heartrate.service.UserService;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class UserControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private TestEmailService testEmailService;
+
+    @BeforeEach
+    void setUp() {
+        testEmailService.clear();
+    }
 
     @Test
     public void testSignUpAndSignIn() {
@@ -54,34 +72,56 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testPasswordReset() {
-        // First signup a user
+    void testPasswordResetFlow() {
+        // Create a user
         User user = new User();
         user.setEmail("reset@example.com");
         user.setPassword("password123");
-        restTemplate.postForEntity("/api/users/signup", user, User.class);
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user = userService.signup(user);
 
         // Request password reset
         Map<String, String> request = new HashMap<>();
         request.put("email", "reset@example.com");
-        ResponseEntity<String> resetRequestResponse = restTemplate.postForEntity(
+        
+        ResponseEntity<Void> response = restTemplate.postForEntity(
             "/api/users/reset-password/request",
             request,
-            String.class
+            Void.class
         );
-        assertEquals(HttpStatus.OK, resetRequestResponse.getStatusCode());
-        String resetToken = resetRequestResponse.getBody();
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // Verify email was sent
+        TestEmailService.SentEmail sentEmail = testEmailService.getLastEmailFor("reset@example.com");
+        assertNotNull(sentEmail);
+        assertEquals("Password Reset Request", sentEmail.getSubject());
+        System.out.println("Email body: " + sentEmail.getBody());
+        assertTrue(sentEmail.getBody().contains("http://localhost:8080/reset-password?token="));
+
+        // Extract token from email body
+        String emailBody = sentEmail.getBody();
+        String token = emailBody.substring(
+            emailBody.indexOf("token=") + 6,
+            emailBody.indexOf("\n", emailBody.indexOf("token="))
+        );
 
         // Reset password
         Map<String, String> resetRequest = new HashMap<>();
-        resetRequest.put("token", resetToken);
-        resetRequest.put("newPassword", "newpassword123");
-        ResponseEntity<Boolean> resetResponse = restTemplate.postForEntity(
+        resetRequest.put("token", token);
+        resetRequest.put("newPassword", "newPassword123");
+
+        response = restTemplate.postForEntity(
             "/api/users/reset-password",
             resetRequest,
-            Boolean.class
+            Void.class
         );
-        assertEquals(HttpStatus.OK, resetResponse.getStatusCode());
-        assertTrue(resetResponse.getBody());
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // Verify new password works
+        User loggedInUser = userService.signin("reset@example.com", "newPassword123");
+        assertNotNull(loggedInUser);
     }
 } 

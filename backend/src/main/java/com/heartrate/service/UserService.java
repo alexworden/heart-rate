@@ -1,22 +1,36 @@
 package com.heartrate.service;
 
-import com.heartrate.model.User;
-import com.heartrate.repository.UserRepository;
+import java.util.Date;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
+
+import com.heartrate.config.PasswordResetConfig;
+import com.heartrate.model.User;
+import com.heartrate.repository.UserRepository;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
+    private final PasswordResetConfig passwordResetConfig;
+    private final byte[] jwtSecret = Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    @Autowired
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, NotificationService notificationService, PasswordResetConfig passwordResetConfig) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
+        this.passwordResetConfig = passwordResetConfig;
     }
 
-    public User signUp(User user) {
+    public User signup(User user) {
         if (user.getPassword().length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
@@ -24,7 +38,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User signIn(String email, String password) {
+    public User signin(String email, String password) {
         User user = userRepository.findByEmail(email);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return user;
@@ -32,28 +46,47 @@ public class UserService {
         return null;
     }
 
-    public String generateResetToken(String email) {
+    public void requestPasswordReset(String email) {
         User user = userRepository.findByEmail(email);
         if (user != null) {
-            String token = UUID.randomUUID().toString();
-            user.setResetToken(token);
-            userRepository.save(user);
-            return token;
+            String token = Jwts.builder()
+                .setSubject(user.getEmail())
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
+                .signWith(Keys.hmacShaKeyFor(jwtSecret))
+                .compact();
+            notificationService.sendPasswordResetEmail(user, passwordResetConfig.getResetUrl(), token);
         }
-        return null;
     }
 
-    public boolean resetPassword(String token, String newPassword) {
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @SuppressWarnings("squid:S1181")
+    public void resetPassword(String resetToken, String newPassword) {
         if (newPassword.length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
-        User user = userRepository.findByResetToken(token);
-        if (user != null) {
+        try {
+            String email = Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret))
+                .build()
+                .parseClaimsJws(resetToken)
+                .getBody()
+                .getSubject();
+            
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                throw new IllegalArgumentException("Invalid reset token");
+            }
             user.setPassword(passwordEncoder.encode(newPassword));
-            user.setResetToken(null);
             userRepository.save(user);
-            return true;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid or expired reset token");
         }
-        return false;
+    }
+
+    public byte[] getJwtSecret() {
+        return jwtSecret;
     }
 } 

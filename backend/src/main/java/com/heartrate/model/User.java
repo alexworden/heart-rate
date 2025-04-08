@@ -1,12 +1,15 @@
 package com.heartrate.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "users")
 public class User {
@@ -20,6 +23,7 @@ public class User {
     private String zipCode;
     private String gender;
     private String resetToken;
+    private LocalDateTime resetTokenExpiry;
 
     public User() {
         this.id = UUID.randomUUID();
@@ -96,6 +100,14 @@ public class User {
 
     public void setResetToken(String resetToken) {
         this.resetToken = resetToken;
+    }
+
+    public LocalDateTime getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
     }
 
     @Override
