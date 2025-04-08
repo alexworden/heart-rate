@@ -1,0 +1,6 @@
+com/heartrate/service/UserService.class
+com/heartrate/model/User.class
+com/heartrate/HeartRateApplication.class
+com/heartrate/controller/UserController.class
+com/heartrate/config/SecurityConfig.class
+com/heartrate/repository/UserRepository.class

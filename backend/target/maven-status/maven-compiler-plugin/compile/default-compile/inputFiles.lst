@@ -1,0 +1,6 @@
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/model/User.java
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/config/SecurityConfig.java
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/service/UserService.java
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/repository/UserRepository.java
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/HeartRateApplication.java
+/Users/dev/projects/heart-rate/backend/src/main/java/com/heartrate/controller/UserController.java
