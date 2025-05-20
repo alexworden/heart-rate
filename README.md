@@ -43,7 +43,7 @@ cd backend
 
 2. Run the Spring Boot application:
 ```bash
-./gradlew bootRun
+./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=true"
 ```
 
 The backend will be available at `http://localhost:8080`

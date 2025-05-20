@@ -1,6 +1,6 @@
-# Heart Rate Monitor Backend
+# Heart Rate Backend
 
-This is the backend service for the Heart Rate Monitor application, built with Spring Boot.
+This is the backend service for the Heart Rate application, built with Spring Boot.
 
 ## Prerequisites
 

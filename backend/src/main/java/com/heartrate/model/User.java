@@ -7,6 +7,7 @@ import java.util.UUID;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import lombok.Data;
 
 @Data
@@ -15,14 +16,23 @@ import lombok.Data;
 public class User {
     @Id
     private UUID id;
+    @Column(nullable = true)
     private String firstName;
+    @Column(nullable = true)
     private String lastName;
+    @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false)
     private String password;
+    @Column(nullable = true)
     private LocalDate dateOfBirth;
+    @Column(nullable = true)
     private String zipCode;
+    @Column(nullable = true)
     private String gender;
+    @Column(nullable = true)
     private String resetToken;
+    @Column(nullable = true)
     private LocalDateTime resetTokenExpiry;
 
     public User() {

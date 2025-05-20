@@ -9,17 +9,21 @@ import com.heartrate.model.User;
 public class NotificationService {
     private static final String RESET_EMAIL_SUBJECT = "Password Reset Request";
     private static final String RESET_EMAIL_TEMPLATE = """
-        Hello %s,
+Hello %s,
 
-        We received a request to reset your password. If you did not make this request, please ignore this email.
+We received a request to reset your password. If you did not make this request, please ignore this email.
 
-        To reset your password, please click the following link:
+To reset your password, please click the following link:
 %s?token=%s
 
-        This link will expire in 24 hours.
+This link will expire in 24 hours.
 
-        Best regards,
-        Heart Rate Monitor Team""";
+Best regards,
+HeartRate Team""";
+
+    private static final String EMAIL_SIGNATURE = """
+            Best regards,
+            HeartRate Team""";
 
     private final EmailService emailService;
 

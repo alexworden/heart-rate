@@ -61,14 +61,18 @@ public class UserControllerIntegrationTest {
         credentials.put("email", "test@example.com");
         credentials.put("password", "password123");
 
-        ResponseEntity<User> signInResponse = restTemplate.postForEntity(
+        ResponseEntity<Map> signInResponse = restTemplate.postForEntity(
             "/api/users/signin",
             credentials,
-            User.class
+            Map.class
         );
         assertEquals(HttpStatus.OK, signInResponse.getStatusCode());
         assertNotNull(signInResponse.getBody());
-        assertEquals("Test", signInResponse.getBody().getFirstName());
+        assertTrue(signInResponse.getBody().containsKey("token"));
+        assertTrue(signInResponse.getBody().containsKey("user"));
+        
+        Map<String, Object> userData = (Map<String, Object>) signInResponse.getBody().get("user");
+        assertEquals("Test", userData.get("firstName"));
     }
 
     @Test
@@ -121,7 +125,12 @@ public class UserControllerIntegrationTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
         // Verify new password works
-        User loggedInUser = userService.signin("reset@example.com", "newPassword123");
-        assertNotNull(loggedInUser);
+        Map<String, Object> signinResult = userService.signin("reset@example.com", "newPassword123");
+        assertNotNull(signinResult);
+        assertTrue(signinResult.containsKey("token"));
+        assertTrue(signinResult.containsKey("user"));
+        
+        Map<String, Object> userData = (Map<String, Object>) signinResult.get("user");
+        assertEquals("Test", userData.get("firstName"));
     }
 } 

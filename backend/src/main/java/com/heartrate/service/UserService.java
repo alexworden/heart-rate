@@ -1,7 +1,11 @@
 package com.heartrate.service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,25 +13,26 @@ import org.springframework.stereotype.Service;
 import com.heartrate.config.PasswordResetConfig;
 import com.heartrate.model.User;
 import com.heartrate.repository.UserRepository;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import com.heartrate.security.JwtTokenProvider;
 
 @Service
 public class UserService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
     private final PasswordResetConfig passwordResetConfig;
-    private final byte[] jwtSecret = Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded();
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, NotificationService notificationService, PasswordResetConfig passwordResetConfig) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
+                      NotificationService notificationService, PasswordResetConfig passwordResetConfig,
+                      JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.notificationService = notificationService;
         this.passwordResetConfig = passwordResetConfig;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public User signup(User user) {
@@ -38,10 +43,15 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User signin(String email, String password) {
+    public Map<String, Object> signin(String email, String password) {
         User user = userRepository.findByEmail(email);
+
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
+            String token = jwtTokenProvider.createToken(user.getEmail());
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
+            response.put("user", user);
+            return response;
         }
         return null;
     }
@@ -49,11 +59,7 @@ public class UserService {
     public void requestPasswordReset(String email) {
         User user = userRepository.findByEmail(email);
         if (user != null) {
-            String token = Jwts.builder()
-                .setSubject(user.getEmail())
-                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1 hour
-                .signWith(Keys.hmacShaKeyFor(jwtSecret))
-                .compact();
+            String token = jwtTokenProvider.createToken(user.getEmail());
             notificationService.sendPasswordResetEmail(user, passwordResetConfig.getResetUrl(), token);
         }
     }
@@ -62,18 +68,15 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    @SuppressWarnings("squid:S1181")
     public void resetPassword(String resetToken, String newPassword) {
         if (newPassword.length() < 6) {
             throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
         try {
-            String email = Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret))
-                .build()
-                .parseClaimsJws(resetToken)
-                .getBody()
-                .getSubject();
+            String email = jwtTokenProvider.getEmailFromToken(resetToken);
+            if (email == null) {
+                throw new IllegalArgumentException("Invalid reset token");
+            }
             
             User user = userRepository.findByEmail(email);
             if (user == null) {
@@ -86,7 +89,15 @@ public class UserService {
         }
     }
 
-    public byte[] getJwtSecret() {
-        return jwtSecret;
+    public User getCurrentUser(String token) {
+        try {
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            if (email == null) {
+                return null;
+            }
+            return userRepository.findByEmail(email);
+        } catch (Exception e) {
+            return null;
+        }
     }
 } 
