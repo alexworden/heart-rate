@@ -13,7 +13,7 @@ This is the backend service for the Heart Rate application, built with Spring Bo
 To build the project, run:
 
 ```bash
-./mvnw clean install
+mvn clean install
 ```
 
 ## Running the Application
@@ -21,27 +21,49 @@ To build the project, run:
 To run the application in development mode:
 
 ```bash
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 The application will start on port 8080 by default.
+
+### Running with Hot Reload
+
+To run the application with hot reload enabled (automatically restarts when code changes are detected):
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=true"
+```
+
+### Running with Debug Logging
+
+To run the application with debug logging enabled for packages under this project:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dlogging.level.com.heartrate=DEBUG"
+```
+
+You can also combine hot reload and debug logging:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=true -Dlogging.level.com.heartrate=DEBUG"
+```
 
 ## Running Tests
 
 To run all tests:
 
 ```bash
-./mvnw test
+mvn test
 ```
 
 To run specific test classes:
 
 ```bash
 # Run integration tests
-./mvnw test -Dtest=UserControllerIntegrationTest
+mvn test -Dtest=UserControllerIntegrationTest
 
 # Run repository tests
-./mvnw test -Dtest=UserRepositoryTest
+mvn test -Dtest=UserRepositoryTest
 ```
 
 ## Configuration
