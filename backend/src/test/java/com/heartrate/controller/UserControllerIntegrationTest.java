@@ -130,7 +130,7 @@ public class UserControllerIntegrationTest {
         assertTrue(signinResult.containsKey("token"));
         assertTrue(signinResult.containsKey("user"));
         
-        Map<String, Object> userData = (Map<String, Object>) signinResult.get("user");
-        assertEquals("Test", userData.get("firstName"));
+        User userData = (User) signinResult.get("user");
+        assertEquals("Test", userData.getFirstName());
     }
 } 

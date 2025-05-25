@@ -37,6 +37,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow all OPTIONS requests
                 .requestMatchers("/api/users/signin", "/api/users/signup").permitAll()
+                .requestMatchers("/api/users/reset-password/**").permitAll() // Allow password reset endpoints
                 .requestMatchers("/api/users/current-user").authenticated()
                 .anyRequest().authenticated()
             )

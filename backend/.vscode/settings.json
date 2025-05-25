@@ -1,6 +1,7 @@
 {
-    "cSpell.words": [
-        "heartrate",
-        "Jwts"
-    ]
-}
+    "cSpell.enabled": false,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.jdt.ls.java.home": "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home",
+    "java.project.sourcePaths": ["src/main/java"],
+    "java.project.outputPath": "target/classes"
+} 
