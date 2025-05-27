@@ -1,23 +1,23 @@
 package com.heartrate.config;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod;
 
 import com.heartrate.security.JwtAuthenticationFilter;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -39,6 +39,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/users/signin", "/api/users/signup").permitAll()
                 .requestMatchers("/api/users/reset-password/**").permitAll() // Allow password reset endpoints
                 .requestMatchers("/api/users/current-user").authenticated()
+                
+                // Allow authenticated access to item endpoints
+                .requestMatchers(HttpMethod.POST, "/api/items").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/items/from-url").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/items/{itemId}").authenticated()
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
